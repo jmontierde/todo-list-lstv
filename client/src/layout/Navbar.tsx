@@ -1,5 +1,5 @@
 import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
+import { Box } from "@mui/material";
 import Drawer from "@mui/material/Drawer";
 import List from "@mui/material/List";
 import Divider from "@mui/material/Divider";
@@ -75,7 +75,7 @@ export default function Navbar() {
         open={isMobile ? drawerOpen : true}
         onClose={() => setDrawerOpen(false)}
         sx={{
-          width: 250,
+          // width: 250,
           flexShrink: 0,
           "& .MuiDrawer-paper": {
             width: 250,
