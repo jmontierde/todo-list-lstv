@@ -6,6 +6,7 @@ import {
   deleteTodo,
   Todo,
 } from "../api/todoApi";
+import { updateTodoDone } from "../api/todoApi";
 import useTodoStore from "../stores/useTodoStore";
 import { Button } from "@mui/material";
 
@@ -27,6 +28,13 @@ const TodoList: React.FC = () => {
       }),
     onSuccess: (updateDetailsTodo) => {
       updateTodoInStore(updateDetailsTodo);
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    },
+  });
+
+  const mutationUpdateDone = useMutation({
+    mutationFn: (id: number, done: boolean) => updateTodoDone(id, { done }),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
   });
@@ -53,6 +61,10 @@ const TodoList: React.FC = () => {
     mutationUpdate.mutate(updateDetailsTodo);
   };
 
+  const handleUpdateDone = (id: number, done: boolean) => {
+    mutationUpdateDone.mutate(id, !done);
+  };
+
   const handleDelete = (id: number) => {
     mutationDelete.mutate(id);
   };
@@ -66,6 +78,10 @@ const TodoList: React.FC = () => {
           <small>{new Date(todo.create_at).toLocaleDateString()}</small>
           <p>{todo.done ? "Completed" : "Not Completed"}</p>
           <Button onClick={() => handleUpdate(todo)}>Update Details</Button>
+          <Button onClick={() => handleUpdateDone(todo.id, todo.done)}>
+            Update Done
+          </Button>
+
           <Button onClick={() => handleDelete(todo.id)} color="error">
             Delete
           </Button>
