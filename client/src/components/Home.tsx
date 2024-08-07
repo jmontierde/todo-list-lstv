@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import TodoList from "./TodoList";
 import { Button, TextField } from "@mui/material";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import useTodoStore from "../stores/useTodoStore";
 import { createTodo } from "../api/todoApi";
 

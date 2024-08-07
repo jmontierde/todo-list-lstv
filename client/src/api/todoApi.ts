@@ -10,7 +10,7 @@ export interface Todo {
   title: string;
   description: string;
   create_at: string;
-  done: boolean; // Ensure `done` is a boolean
+  done: boolean; 
 }
 
 export const fetchTodos = async (): Promise<Todo[]> => {
@@ -23,11 +23,19 @@ export const createTodo = async (title: string, description: string): Promise<To
   return response.data;
 };
 
-export const updateTodo = async (id: number, data: { title?: string; completed?: boolean }): Promise<Todo> => {
-  const response = await api.put(`/todos/${id}`, data);
-  return response.data;
-};
 
-export const deleteTodo = async (id: number): Promise<void> => {
-  await api.delete(`/todos/${id}`);
-};
+export const updateDetailsTodo = async (id: number, data: { title: string; description: string; }): Promise<Todo> => {
+    const response = await api.put(`/update/details/${id}`, data);
+    return response.data;
+  };
+
+  
+export const updateDoneTodo = async (id: number, data: { done: boolean }): Promise<Todo> => {
+    const response = await api.put(`/update/${id}`, data);
+    return response.data;
+  };
+
+
+  export const deleteTodo = async (id: number): Promise<void> => {
+    await api.delete(`/delete/${id}`);
+  };

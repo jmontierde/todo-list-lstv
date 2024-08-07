@@ -1,25 +1,61 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
-// import useTodoStore from "../stores/useTodoStore";
-import { fetchTodos } from "../api/todoApi";
-import { Todo } from "../api/todoApi";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  fetchTodos,
+  updateDetailsTodo,
+  deleteTodo,
+  Todo,
+} from "../api/todoApi";
+import useTodoStore from "../stores/useTodoStore";
+import { Button } from "@mui/material";
 
-type TodoProps = {
-  todo: Todo;
-};
+const TodoList: React.FC = () => {
+  const queryClient = useQueryClient();
+  const updateTodoInStore = useTodoStore((state) => state.updateTodo);
+  const removeTodoFromStore = useTodoStore((state) => state.removeTodo);
 
-const TodoList = ({ todo }: TodoProps) => {
-  //   const setTodos = useTodoStore((state) => state.setTodos);
-
-  // Correct useQuery usage with options object
-  const { data: todos, isLoading } = useQuery({
+  const { data: todos, isLoading } = useQuery<Todo[], Error>({
     queryKey: ["todos"],
     queryFn: fetchTodos,
+  });
+
+  const mutationUpdate = useMutation({
+    mutationFn: (todo: Todo) =>
+      updateDetailsTodo(todo.id, {
+        title: todo.title,
+        description: todo.description,
+      }),
+    onSuccess: (updateDetailsTodo) => {
+      updateTodoInStore(updateDetailsTodo);
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    },
+  });
+
+  const mutationDelete = useMutation({
+    mutationFn: (id: number) => deleteTodo(id),
+    onSuccess: (_, id) => {
+      removeTodoFromStore(id);
+      queryClient.invalidateQueries({ queryKey: ["todos"] });
+    },
   });
 
   if (isLoading) {
     return <div>Loading...</div>;
   }
+
+  const handleUpdate = (todo: Todo) => {
+    const updateDetailsTodo = {
+      ...todo,
+      title: prompt("Enter new title:", todo.title) || todo.title,
+      description:
+        prompt("Enter new description:", todo.description) || todo.description,
+    };
+    mutationUpdate.mutate(updateDetailsTodo);
+  };
+
+  const handleDelete = (id: number) => {
+    mutationDelete.mutate(id);
+  };
 
   return (
     <div>
@@ -29,6 +65,10 @@ const TodoList = ({ todo }: TodoProps) => {
           <p>{todo.description}</p>
           <small>{new Date(todo.create_at).toLocaleDateString()}</small>
           <p>{todo.done ? "Completed" : "Not Completed"}</p>
+          <Button onClick={() => handleUpdate(todo)}>Update Details</Button>
+          <Button onClick={() => handleDelete(todo.id)} color="error">
+            Delete
+          </Button>
         </div>
       ))}
     </div>
