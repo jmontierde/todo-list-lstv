@@ -6,9 +6,6 @@ import con from '../config/db.js'
 export const AddTodo = async (req, res) => { 
         const { title, description } = req.body; 
 
-        console.log("title", title);
-        
-        
         const query = 'INSERT INTO todos (title, description) VALUES (?, ? )';
 
         con.query(query, [title, description], (err, result) => {
