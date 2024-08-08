@@ -45,18 +45,18 @@ export const updateTodoDoneById = async (req, res) => {
 
     const doneValue = done ? 1 : 0;
 
-    // con.query(query, [doneValue, req.params.id], (err, result) => { 
-    //     if (err) {
-    //         console.error(err);
-    //         res.status(500).json({ message: 'An error occurred' });
-    //     } else {
-    //         res.json({ message: 'Updated Successfully' });
-    //     }
-    // });
-    con.query(query, [done, req.params.id], (err, result) => { 
-        if (err) throw err;  
-        res.json({ message: 'Updated Successfully' });
+    con.query(query, [doneValue, req.params.id], (err, result) => { 
+        if (err) {
+            console.error(err);
+            res.status(500).json({ message: 'An error occurred' });
+        } else {
+            res.json({ message: 'Updated Successfully' });
+        }
     });
+    // con.query(query, [done, req.params.id], (err, result) => { 
+    //     if (err) throw err;  
+    //     res.json({ message: 'Updated Successfully' });
+    // });
 };
 
 export const deleteTodoById = async(req, res) => { 

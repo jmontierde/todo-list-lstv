@@ -30,7 +30,7 @@ export const updateDetailsTodo = async (id: number, data: { title: string; descr
   };
 
   
-export const updateDoneTodo = async (id: number, data: { done: boolean }): Promise<Todo> => {
+export const updateTodoDoneById = async (id: number, data: { done: boolean }): Promise<Todo> => {
     const response = await api.put(`/update/${id}`, data);
     return response.data;
   };

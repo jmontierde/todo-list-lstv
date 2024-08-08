@@ -5,10 +5,11 @@ import {
   updateDetailsTodo,
   deleteTodo,
   Todo,
+  updateTodoDoneById,
 } from "../api/todoApi";
-import { updateTodoDone } from "../api/todoApi";
 import useTodoStore from "../stores/useTodoStore";
 import { Button } from "@mui/material";
+import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 
 const TodoList: React.FC = () => {
   const queryClient = useQueryClient();
@@ -26,14 +27,15 @@ const TodoList: React.FC = () => {
         title: todo.title,
         description: todo.description,
       }),
-    onSuccess: (updateDetailsTodo) => {
-      updateTodoInStore(updateDetailsTodo);
+    onSuccess: (updatedTodo) => {
+      updateTodoInStore(updatedTodo);
       queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
   });
 
   const mutationUpdateDone = useMutation({
-    mutationFn: (id: number, done: boolean) => updateTodoDone(id, { done }),
+    mutationFn: ({ id, done }: { id: number; done: boolean }) =>
+      updateTodoDoneById(id, { done }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["todos"] });
     },
@@ -52,41 +54,94 @@ const TodoList: React.FC = () => {
   }
 
   const handleUpdate = (todo: Todo) => {
-    const updateDetailsTodo = {
+    const updatedTodo = {
       ...todo,
       title: prompt("Enter new title:", todo.title) || todo.title,
       description:
         prompt("Enter new description:", todo.description) || todo.description,
     };
-    mutationUpdate.mutate(updateDetailsTodo);
+    mutationUpdate.mutate(updatedTodo);
   };
 
   const handleUpdateDone = (id: number, done: boolean) => {
-    mutationUpdateDone.mutate(id, !done);
+    mutationUpdateDone.mutate({ id, done: !done });
   };
 
   const handleDelete = (id: number) => {
     mutationDelete.mutate(id);
   };
 
-  return (
-    <div>
-      {todos?.map((todo) => (
-        <div key={todo.id}>
-          <strong>{todo.title}</strong>
-          <p>{todo.description}</p>
-          <small>{new Date(todo.create_at).toLocaleDateString()}</small>
-          <p>{todo.done ? "Completed" : "Not Completed"}</p>
-          <Button onClick={() => handleUpdate(todo)}>Update Details</Button>
-          <Button onClick={() => handleUpdateDone(todo.id, todo.done)}>
+  const columns: GridColDef[] = [
+    { field: "id", headerName: "ID", width: 70 },
+    { field: "title", headerName: "Title", width: 130, editable: true },
+    {
+      field: "description",
+      headerName: "Description",
+      width: 200,
+      editable: true,
+    },
+    {
+      field: "create_at",
+      headerName: "Created At",
+      width: 150,
+      valueFormatter: ({ value }) =>
+        new Intl.DateTimeFormat("fr-CA", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(value),
+    },
+    {
+      field: "done",
+      headerName: "Status",
+      width: 130,
+      renderCell: (params) => (
+        <span>{params.value ? "Completed" : "Not Completed"}</span>
+      ),
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 500,
+      renderCell: (params: GridRenderCellParams<Todo>) => (
+        <div>
+          <Button onClick={() => handleUpdate(params.row)}>
+            Update Details
+          </Button>
+          <Button
+            onClick={() => handleUpdateDone(params.row.id, params.row.done)}
+          >
             Update Done
           </Button>
-
-          <Button onClick={() => handleDelete(todo.id)} color="error">
+          <Button onClick={() => handleDelete(params.row.id)} color="error">
             Delete
           </Button>
         </div>
-      ))}
+      ),
+    },
+  ];
+
+  const rows = todos?.map((todo) => ({
+    id: todo.id,
+    title: todo.title,
+    description: todo.description,
+    create_at: todo.create_at,
+    done: todo.done,
+  }));
+
+  return (
+    <div style={{ height: "100%", width: "100%" }}>
+      <DataGrid
+        rows={rows || []}
+        columns={columns}
+        initialState={{
+          pagination: {
+            paginationModel: { page: 0, pageSize: 5 },
+          },
+        }}
+        pageSizeOptions={[5, 10]}
+        checkboxSelection
+      />
     </div>
   );
 };
