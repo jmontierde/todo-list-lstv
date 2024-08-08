@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   fetchTodos,
@@ -8,8 +8,20 @@ import {
   updateTodoDoneById,
 } from "../api/todoApi";
 import useTodoStore from "../stores/useTodoStore";
-import { Button } from "@mui/material";
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
+} from "@mui/material";
+import {
+  DataGrid,
+  GridColDef,
+  GridRenderCellParams,
+  GridRowModel,
+} from "@mui/x-data-grid";
 
 const TodoList: React.FC = () => {
   const queryClient = useQueryClient();
@@ -49,26 +61,46 @@ const TodoList: React.FC = () => {
     },
   });
 
+  const [open, setOpen] = useState(false);
+  const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
+
+  const handleClickOpen = (id: number) => {
+    setSelectedTodoId(id);
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setSelectedTodoId(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedTodoId !== null) {
+      mutationDelete.mutate(selectedTodoId);
+      handleClose();
+    }
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
-
-  const handleUpdate = (todo: Todo) => {
-    const updatedTodo = {
-      ...todo,
-      title: prompt("Enter new title:", todo.title) || todo.title,
-      description:
-        prompt("Enter new description:", todo.description) || todo.description,
-    };
-    mutationUpdate.mutate(updatedTodo);
-  };
 
   const handleUpdateDone = (id: number, done: boolean) => {
     mutationUpdateDone.mutate({ id, done: !done });
   };
 
-  const handleDelete = (id: number) => {
-    mutationDelete.mutate(id);
+  const processRowUpdate = async (newRow: GridRowModel) => {
+    // Ensure newRow matches the Todo type
+    const updatedTodo: Todo = {
+      id: newRow.id as number,
+      title: newRow.title as string,
+      description: newRow.description as string,
+      create_at: newRow.create_at as string,
+      done: newRow.done as boolean,
+    };
+
+    mutationUpdate.mutate(updatedTodo);
+    return updatedTodo;
   };
 
   const columns: GridColDef[] = [
@@ -105,15 +137,12 @@ const TodoList: React.FC = () => {
       width: 500,
       renderCell: (params: GridRenderCellParams<Todo>) => (
         <div>
-          <Button onClick={() => handleUpdate(params.row)}>
-            Update Details
-          </Button>
           <Button
             onClick={() => handleUpdateDone(params.row.id, params.row.done)}
           >
-            Update Done
+            {params.row.done ? "Not Done" : "Update Done"}
           </Button>
-          <Button onClick={() => handleDelete(params.row.id)} color="error">
+          <Button onClick={() => handleClickOpen(params.row.id)} color="error">
             Delete
           </Button>
         </div>
@@ -141,7 +170,22 @@ const TodoList: React.FC = () => {
         }}
         pageSizeOptions={[5, 10]}
         checkboxSelection
+        processRowUpdate={processRowUpdate}
+        // experimentalFeatures={{ newEditingApi: true }}
       />
+      {/* Confirmation Dialog */}
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this item?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

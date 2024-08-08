@@ -39,3 +39,8 @@ export const updateTodoDoneById = async (id: number, data: { done: boolean }): P
   export const deleteTodo = async (id: number): Promise<void> => {
     await api.delete(`/delete/${id}`);
   };
+
+
+  export const deleteTodos = async(): Promise<void> => { 
+    await api.delete('/delete')
+  }
